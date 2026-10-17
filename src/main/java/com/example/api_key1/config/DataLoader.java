@@ -20,11 +20,11 @@ public class DataLoader implements CommandLineRunner {
     private final ClienteRepository clienteRepository;
 
     private static final Map<String, String> CORREOS = Map.of(
-            "12345678", "juan.quispe@correo.com",
-            "87654321", "maria.flores@correo.com",
-            "45678912", "luis.ramos@correo.com",
-            "70123456", "rosa.huaman@correo.com",
-            "10293847", "pedro.sanchez@correo.com");
+            "12345678", "juan.quispe@gmail.com",
+            "87654321", "maria.flores@gmail.com",
+            "45678912", "luis.ramos@gmail.com",
+            "70123456", "rosa.huaman@gmail.com",
+            "10293847", "pedro.sanchez@gmail.com");
 
     @Override
     public void run(String... args) {
