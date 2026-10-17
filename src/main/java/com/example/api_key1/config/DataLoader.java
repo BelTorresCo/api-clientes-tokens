@@ -8,14 +8,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-// Si las tablas están vacías (por ejemplo en la base de la nube), registra los datos mínimos (requisito 4).
-// En phpMyAdmin no hace nada porque los datos ya se cargaron con el script SQL.
+import java.util.Map;
+
+// Registra los datos mínimos si las tablas están vacías (requisito 4)
+// y completa el correo de los clientes que lo tengan vacío.
 @Component
 @RequiredArgsConstructor
 public class DataLoader implements CommandLineRunner {
 
     private final UsuarioApiRepository usuarioApiRepository;
     private final ClienteRepository clienteRepository;
+
+    private static final Map<String, String> CORREOS = Map.of(
+            "12345678", "juan.quispe@correo.com",
+            "87654321", "maria.flores@correo.com",
+            "45678912", "luis.ramos@correo.com",
+            "70123456", "rosa.huaman@correo.com",
+            "10293847", "pedro.sanchez@correo.com");
 
     @Override
     public void run(String... args) {
@@ -24,11 +33,18 @@ public class DataLoader implements CommandLineRunner {
             usuarioApiRepository.save(usuario("soporte_techservices", "API_KEY_SOPORTE_2026", "TOKEN_SOPORTE_654321", 1));
         }
         if (clienteRepository.count() == 0) {
-            clienteRepository.save(cliente("Juan Carlos", "Quispe Mamani", "12345678", "juan.quispe@correo.com", "987654321"));
-            clienteRepository.save(cliente("María Elena", "Flores García", "87654321", "maria.flores@correo.com", "912345678"));
-            clienteRepository.save(cliente("Luis Alberto", "Ramos Chávez", "45678912", "luis.ramos@correo.com", "923456789"));
-            clienteRepository.save(cliente("Rosa Isabel", "Huamán Torres", "70123456", "rosa.huaman@correo.com", "934567890"));
-            clienteRepository.save(cliente("Pedro José", "Sánchez Vargas", "10293847", "pedro.sanchez@correo.com", "945678901"));
+            clienteRepository.save(cliente("Juan Carlos", "Quispe Mamani", "12345678", "987654321"));
+            clienteRepository.save(cliente("María Elena", "Flores García", "87654321", "912345678"));
+            clienteRepository.save(cliente("Luis Alberto", "Ramos Chávez", "45678912", "923456789"));
+            clienteRepository.save(cliente("Rosa Isabel", "Huamán Torres", "70123456", "934567890"));
+            clienteRepository.save(cliente("Pedro José", "Sánchez Vargas", "10293847", "945678901"));
+        }
+        // Completa correos vacíos
+        for (Cliente c : clienteRepository.findAll()) {
+            if (c.getCorreo() == null && CORREOS.containsKey(c.getDni())) {
+                c.setCorreo(CORREOS.get(c.getDni()));
+                clienteRepository.save(c);
+            }
         }
     }
 
@@ -42,12 +58,12 @@ public class DataLoader implements CommandLineRunner {
         return u;
     }
 
-    private Cliente cliente(String nombres, String apellidos, String dni, String correo, String telefono) {
+    private Cliente cliente(String nombres, String apellidos, String dni, String telefono) {
         Cliente c = new Cliente();
         c.setNombres(nombres);
         c.setApellidos(apellidos);
         c.setDni(dni);
-        c.setCorreo(correo);
+        c.setCorreo(CORREOS.get(dni));
         c.setTelefono(telefono);
         return c;
     }
