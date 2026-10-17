@@ -13,20 +13,19 @@ import java.io.IOException;
 public class JsonAuthEntryPoint implements AuthenticationEntryPoint {
 
     @Override
-    public void commence(HttpServletRequest request,
-                         HttpServletResponse response,
+    public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
 
-        boolean faltanHeaders = request.getHeader(ApiKeyTokenFilter.HEADER_API_KEY) == null
-                || request.getHeader(ApiKeyTokenFilter.HEADER_TOKEN) == null;
+        String auth = request.getHeader(ApiKeyTokenFilter.HEADER_AUTH);
+        boolean faltan = request.getHeader(ApiKeyTokenFilter.HEADER_API_KEY) == null
+                || auth == null || !auth.startsWith("Bearer ");
 
-        String mensaje = faltanHeaders
-                ? "Debe enviar los headers X-API-KEY y X-TOKEN"
+        String mensaje = faltan
+                ? "Debe enviar los headers x-api-key y Authorization: Bearer <token>"
                 : "Credenciales inválidas: la API Key o el Token no son correctos";
 
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(
-                "{\"status\":401,\"success\":false,\"message\":\"" + mensaje + "\"}");
+        response.getWriter().write("{\"status\":401,\"success\":false,\"mensaje\":\"" + mensaje + "\"}");
     }
 }

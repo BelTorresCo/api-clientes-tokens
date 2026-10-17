@@ -1,67 +1,54 @@
 package com.example.api_key1.config;
 
-import com.example.api_key1.entity.ClienteEntity;
-import com.example.api_key1.entity.UsersEntity;
+import com.example.api_key1.entity.Cliente;
+import com.example.api_key1.entity.UsuarioApi;
 import com.example.api_key1.repository.ClienteRepository;
-import com.example.api_key1.repository.UsersRepository;
+import com.example.api_key1.repository.UsuarioApiRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
-// Si las tablas están vacías (base nueva en la nube), carga los datos de prueba.
+// Si las tablas están vacías (por ejemplo en la base de la nube), registra los datos mínimos (requisito 4).
+// En phpMyAdmin no hace nada porque los datos ya se cargaron con el script SQL.
 @Component
 @RequiredArgsConstructor
 public class DataLoader implements CommandLineRunner {
 
-    private final UsersRepository usersRepository;
+    private final UsuarioApiRepository usuarioApiRepository;
     private final ClienteRepository clienteRepository;
 
     @Override
     public void run(String... args) {
-        if (usersRepository.count() == 0) {
-            usersRepository.save(usuario("demo", "ak_demo_7f3c9a1e5b2d4f60", "tk_demo_9b8e7d6c5a4f3e21", 10));
-            usersRepository.save(usuario("limite", "ak_lim_3d5e7f9a1b2c4d60", "tk_lim_8a7b6c5d4e3f2a10", 1));
-            usersRepository.save(usuario("sinsaldo", "ak_cero_1a2b3c4d5e6f7a80", "tk_cero_0f9e8d7c6b5a4f30", 0));
+        if (usuarioApiRepository.count() == 0) {
+            usuarioApiRepository.save(usuario("admin_techservices", "MI_API_KEY_2026", "TOKEN_SEGURO_123456", 10));
+            usuarioApiRepository.save(usuario("soporte_techservices", "API_KEY_SOPORTE_2026", "TOKEN_SOPORTE_654321", 1));
         }
-
         if (clienteRepository.count() == 0) {
-            clienteRepository.save(cliente("Juan Carlos", "Quispe Mamani", "12345678",
-                    "juan.quispe@correo.com", "987654321", "Av. Los Incas 123, Lima", LocalDate.of(2024, 3, 14)));
-            clienteRepository.save(cliente("María Elena", "Flores García", "87654321",
-                    "maria.flores@correo.com", "912345678", "Calle Lima 456, Ica", LocalDate.of(2024, 7, 22)));
-            clienteRepository.save(cliente("Luis Alberto", "Ramos Chávez", "45678912",
-                    "luis.ramos@correo.com", "923456789", "Jr. Mercaderes 789, Arequipa", LocalDate.of(2025, 1, 5)));
-            clienteRepository.save(cliente("Rosa Isabel", "Huamán Torres", "70123456",
-                    "rosa.huaman@correo.com", "934567890", "Calle Plateros 321, Cusco", LocalDate.of(2025, 5, 30)));
-            clienteRepository.save(cliente("Pedro José", "Sánchez Vargas", "10293847",
-                    "pedro.sanchez@correo.com", "945678901", "Av. Grau 555, Piura", LocalDate.of(2025, 9, 18)));
+            clienteRepository.save(cliente("Juan Carlos", "Quispe Mamani", "12345678", "juan.quispe@correo.com", "987654321"));
+            clienteRepository.save(cliente("María Elena", "Flores García", "87654321", "maria.flores@correo.com", "912345678"));
+            clienteRepository.save(cliente("Luis Alberto", "Ramos Chávez", "45678912", "luis.ramos@correo.com", "923456789"));
+            clienteRepository.save(cliente("Rosa Isabel", "Huamán Torres", "70123456", "rosa.huaman@correo.com", "934567890"));
+            clienteRepository.save(cliente("Pedro José", "Sánchez Vargas", "10293847", "pedro.sanchez@correo.com", "945678901"));
         }
     }
 
-    private UsersEntity usuario(String username, String apikey, String token, int saldo) {
-        UsersEntity u = new UsersEntity();
-        u.setUsername(username);
-        u.setApikey(apikey);
+    private UsuarioApi usuario(String nombre, String apiKey, String token, int tokens) {
+        UsuarioApi u = new UsuarioApi();
+        u.setNombreUsuario(nombre);
+        u.setApiKey(apiKey);
         u.setToken(token);
-        u.setSaldoTokens(saldo);
-        u.setActivo(true);
-        u.setFechaCreacion(LocalDateTime.now());
+        u.setTokensDisponibles(tokens);
+        u.setEstado("ACTIVO");
         return u;
     }
 
-    private ClienteEntity cliente(String nombres, String apellidos, String dni, String email,
-                                  String telefono, String direccion, LocalDate fecha) {
-        ClienteEntity c = new ClienteEntity();
+    private Cliente cliente(String nombres, String apellidos, String dni, String correo, String telefono) {
+        Cliente c = new Cliente();
         c.setNombres(nombres);
         c.setApellidos(apellidos);
         c.setDni(dni);
-        c.setEmail(email);
+        c.setCorreo(correo);
         c.setTelefono(telefono);
-        c.setDireccion(direccion);
-        c.setFechaRegistro(fecha);
         return c;
     }
 }

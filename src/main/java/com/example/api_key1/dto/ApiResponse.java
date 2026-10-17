@@ -2,25 +2,21 @@ package com.example.api_key1.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-// Formato de todas las respuestas: status, success, message, tokensRestantes, data
+// Respuesta JSON estándar: status, success, mensaje, tokensRestantes y data (requisito 10)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ApiResponse<T>(
         int status,
         boolean success,
-        String message,
+        String mensaje,
         Integer tokensRestantes,
         T data
 ) {
 
-    public static <T> ApiResponse<T> ok(String message, Integer tokensRestantes, T data) {
-        return new ApiResponse<>(200, true, message, tokensRestantes, data);
+    public static <T> ApiResponse<T> ok(String mensaje, Integer tokensRestantes, T data) {
+        return new ApiResponse<>(200, true, mensaje, tokensRestantes, data);
     }
 
-    public static <T> ApiResponse<T> error(int status, String message) {
-        return new ApiResponse<>(status, false, message, null, null);
-    }
-
-    public static <T> ApiResponse<T> error(int status, String message, Integer tokensRestantes) {
-        return new ApiResponse<>(status, false, message, tokensRestantes, null);
+    public static <T> ApiResponse<T> error(int status, String mensaje, Integer tokensRestantes) {
+        return new ApiResponse<>(status, false, mensaje, tokensRestantes, null);
     }
 }

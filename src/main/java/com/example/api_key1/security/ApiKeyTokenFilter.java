@@ -1,6 +1,6 @@
 package com.example.api_key1.security;
 
-import com.example.api_key1.repository.UsersRepository;
+import com.example.api_key1.repository.UsuarioApiRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,32 +13,33 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
-// Lee los headers X-API-KEY y X-TOKEN y valida que existan en la tabla users
+// Valida en cada petición los headers x-api-key y Authorization: Bearer <token> (requisito 7)
 public class ApiKeyTokenFilter extends OncePerRequestFilter {
 
-    public static final String HEADER_API_KEY = "X-API-KEY";
-    public static final String HEADER_TOKEN = "X-TOKEN";
+    public static final String HEADER_API_KEY = "x-api-key";
+    public static final String HEADER_AUTH = "Authorization";
+    private static final String BEARER = "Bearer ";
 
-    private final UsersRepository usersRepository;
+    private final UsuarioApiRepository usuarioApiRepository;
 
-    public ApiKeyTokenFilter(UsersRepository usersRepository) {
-        this.usersRepository = usersRepository;
+    public ApiKeyTokenFilter(UsuarioApiRepository usuarioApiRepository) {
+        this.usuarioApiRepository = usuarioApiRepository;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String apiKey = request.getHeader(HEADER_API_KEY);
-        String token = request.getHeader(HEADER_TOKEN);
+        String auth = request.getHeader(HEADER_AUTH);
 
-        if (apiKey != null && token != null) {
-            usersRepository.findByApikeyAndTokenAndActivoTrue(apiKey.trim(), token.trim())
+        if (apiKey != null && auth != null && auth.startsWith(BEARER)) {
+            String token = auth.substring(BEARER.length()).trim();
+
+            usuarioApiRepository.findByApiKeyAndTokenAndEstado(apiKey.trim(), token, "ACTIVO")
                     .ifPresent(usuario -> {
                         var autenticacion = new UsernamePasswordAuthenticationToken(
-                                usuario.getUsername(),
-                                null,
+                                usuario.getNombreUsuario(), null,
                                 List.of(new SimpleGrantedAuthority("ROLE_API")));
                         SecurityContextHolder.getContext().setAuthentication(autenticacion);
                     });

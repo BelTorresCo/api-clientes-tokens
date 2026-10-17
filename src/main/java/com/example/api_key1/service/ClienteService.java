@@ -1,50 +1,50 @@
 package com.example.api_key1.service;
 
-import com.example.api_key1.dto.ClienteResponse;
+import com.example.api_key1.dto.ClienteDTO;
 import com.example.api_key1.dto.ResultadoConsulta;
-import com.example.api_key1.entity.ClienteEntity;
-import com.example.api_key1.entity.UsersEntity;
+import com.example.api_key1.entity.Cliente;
+import com.example.api_key1.entity.UsuarioApi;
 import com.example.api_key1.exception.RecursoNoEncontradoException;
 import com.example.api_key1.exception.SaldoInsuficienteException;
 import com.example.api_key1.repository.ClienteRepository;
-import com.example.api_key1.repository.UsersRepository;
+import com.example.api_key1.repository.UsuarioApiRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+// SERVICIO - lógica de la consulta con control de tokens
 @Service
 @RequiredArgsConstructor
 public class ClienteService {
 
+    private static final String SIN_SALDO =
+            "Ha agotado sus tokens. No puede consumir la API hasta recargar su saldo.";
+
     private final ClienteRepository clienteRepository;
-    private final UsersRepository usersRepository;
+    private final UsuarioApiRepository usuarioApiRepository;
 
     @Transactional
-    public ResultadoConsulta consultarCliente(Long idCliente, String username) {
-        UsersEntity usuario = usersRepository.findByUsername(username)
+    public ResultadoConsulta consultarPorId(Long id, String nombreUsuario) {
+        UsuarioApi usuario = usuarioApiRepository.findByNombreUsuario(nombreUsuario)
                 .orElseThrow(() -> new SaldoInsuficienteException("Usuario no encontrado", 0));
 
-        // 1. Bloquear si no tiene tokens
-        if (usuario.getSaldoTokens() <= 0) {
-            throw new SaldoInsuficienteException(
-                    "Ha alcanzado su límite de consumo. No tiene tokens disponibles.", 0);
+        // 1. Verificar que tenga tokens antes de consultar (requisitos 8 y 11)
+        if (usuario.getTokensDisponibles() <= 0) {
+            throw new SaldoInsuficienteException(SIN_SALDO, 0);
         }
 
-        // 2. Buscar el cliente (si no existe, no se descuenta)
-        ClienteEntity cliente = clienteRepository.findById(idCliente)
+        // 2. Buscar el cliente; si no existe NO se descuenta (requisito 9)
+        Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException(
-                        "No existe un cliente con ID " + idCliente + ". No se descontó ningún token.",
-                        usuario.getSaldoTokens()));
+                        "No existe un cliente con ID " + id + ". No se descontó ningún token.",
+                        usuario.getTokensDisponibles()));
 
-        // 3. Descontar 1 token
-        int filas = usersRepository.descontarUnToken(usuario.getId());
-        if (filas == 0) {
-            throw new SaldoInsuficienteException(
-                    "Ha alcanzado su límite de consumo. No tiene tokens disponibles.", 0);
+        // 3. Consulta correcta: descontar 1 token (requisito 9)
+        if (usuarioApiRepository.descontarToken(usuario.getId()) == 0) {
+            throw new SaldoInsuficienteException(SIN_SALDO, 0);
         }
 
-        // 4. Devolver el cliente y el saldo que queda
-        int restantes = usersRepository.obtenerSaldo(usuario.getId());
-        return new ResultadoConsulta(ClienteResponse.desde(cliente), restantes);
+        int restantes = usuarioApiRepository.obtenerSaldo(usuario.getId());
+        return new ResultadoConsulta(ClienteDTO.desde(cliente), restantes);
     }
 }

@@ -2,7 +2,8 @@ spring:
   application:
     name: api_key1
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/api_key}
+    # En tu laptop usa XAMPP; en Render usa las variables DB_URL, DB_USER y DB_PASSWORD
+    url: ${DB_URL:jdbc:mysql://localhost:3306/bd_techservices?createDatabaseIfNotExist=true}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:}
   jpa:
